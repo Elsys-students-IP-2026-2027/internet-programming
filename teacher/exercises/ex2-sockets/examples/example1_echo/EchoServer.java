@@ -6,46 +6,68 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 public class EchoServer {
-    public static void main(String[] args) {
-        int port = args.length > 0 ? Integer.parseInt(args[0]) : 12345;
-        System.out.println("Hello World. I am Server!");
 
-        // 1. Създаване на сървърния сокет (ServerSocket).
-        // Сървърът се "закача" за локален порт и започва да слуша за TCP заявки.
-        try (ServerSocket server = new ServerSocket(port)) {
-            while (true) {
-                // 2. Приемане на клиентска връзка.
-                // accept() е блокиращ метод: изчаква клиент да завърши TCP handshake.
-                System.out.println("Waiting for client...");
-                Socket socket = server.accept();
-                System.out.println("Connection established: " + socket.getInetAddress());
+  private static final DateTimeFormatter TIME =
+      DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
-                // 3. Извличане на мрежовите потоци от клиентския сокет.
-                // InputStream е за четене на данни от клиента,
-                // а OutputStream е за изпращане на отговор обратно.
-                try (BufferedReader in = new BufferedReader(
-                         new InputStreamReader(socket.getInputStream()));
-                      PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+  private static void log(String message) {
+    System.out.println("[" + LocalTime.now().format(TIME) + "] " + message);
+  }
 
-                    // 4. Ехо-цикъл за обработка на данните.
-                    // readLine() връща null, когато клиентът затвори своята страна на връзката.
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        System.out.println("Received: " + line);
-                        // Връщаме прочетения ред обратно към клиента.
-                        out.println(line);
-                    }
-                } catch (IOException e) {
-                    System.err.println("Client error: " + e.getMessage());
-                }
+  static void main(String[] args) {
+    int port = args.length > 0 ? Integer.parseInt(args[0]) : 12345;
+    int workSeconds = args.length > 1 ? Integer.parseInt(args[1]) : 15;
+    log("Hello World. I am Server!");
 
-                // 5. Затваряне на клиентската връзка.
-                // try-with-resources затваря socket автоматично и освобождава ресурсите.
+    // binding and listening for TCP connections.
+    try (ServerSocket server = new ServerSocket(port)) {
+      while (true) {
+        // accept() blocking wait 3 ways handshake.
+        log("Waiting for client...");
+        Socket socket = server.accept();
+        log("Connection established: " + socket.getInetAddress());
+
+        // InputStream -reading,
+        // а OutputStream -writing.
+        try (BufferedReader in = new BufferedReader(
+            new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+
+          // readLine() return null, when client disconnects.
+          String line;
+          while ((line = in.readLine()) != null) {
+            log("Received: " + line);
+
+            // Add slow processing.Simulation for long-running tasks for particular client.
+            // The server is processing only one client at a time,the rest of the clients are waiting.
+            log("Processing slowly (" + workSeconds + "s)...");
+            for (int i = workSeconds; i > 0; i--) {
+              log("  working... " + i);
+              try {
+                Thread.sleep(1000);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+              }
             }
+            log("Done. Sending echo back.");
+
+            // send echo back to client.
+            out.println(line);
+          }
         } catch (IOException e) {
-            System.err.println("Server error: " + e.getMessage());
+          System.err.println("Client error: " + e.getMessage());
         }
+
+        // try-with-resources close socket automatically.
+        log("Client disconnected. Ready for the next one.");
+      }
+    } catch (IOException e) {
+      System.err.println("Server error: " + e.getMessage());
     }
+  }
 }

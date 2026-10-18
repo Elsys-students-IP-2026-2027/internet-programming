@@ -1,0 +1,17 @@
+// обща конфигурация за всички модули
+subprojects {
+    apply plugin: 'java'
+
+    group = 'bg.tues'
+    version = '1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+}

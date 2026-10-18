@@ -1,0 +1,9 @@
+apply plugin: 'application'
+
+dependencies {
+    implementation project(':geometry')
+}
+
+application {
+    mainClass = 'bg.tues.app.Main'
+}

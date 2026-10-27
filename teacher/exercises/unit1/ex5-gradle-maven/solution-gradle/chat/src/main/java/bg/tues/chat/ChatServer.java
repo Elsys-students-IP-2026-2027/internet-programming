@@ -23,7 +23,7 @@ public final class ChatServer implements AutoCloseable {
   private static final int DEFAULT_PORT = 2002;
   private static final int DEFAULT_DISPATCH_QUEUE_CAPACITY = 1_024;
   private static final int DEFAULT_CLIENT_QUEUE_CAPACITY = 128;
-  private static final Duration DEFAULT_WRITE_TIMEOUT = Duration.ofSeconds(2);
+  private static final Duration DEFAULT_WRITE_TIMEOUT = Duration.ofSeconds(10);
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
   private final int listeningPort;

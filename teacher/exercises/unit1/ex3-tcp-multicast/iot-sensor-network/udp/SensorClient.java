@@ -6,6 +6,7 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Random;
+import java.util.UUID;
 
 
 public class SensorClient {
@@ -18,7 +19,7 @@ public class SensorClient {
 
   public static void main(String[] args) {
     String host = args.length > 0 ? args[0] : DEFAULT_HOST;
-    String deviceId = args.length > 1 ? args[1] : "sensor1";
+    String deviceId = args.length > 1 ? args[1] : "sensor-" + UUID.randomUUID();
     Random random = new Random();
 
     try (DatagramSocket socket = new DatagramSocket()) {
@@ -45,6 +46,9 @@ public class SensorClient {
               response.getLength(),
               StandardCharsets.UTF_8);
           System.out.println("RX: " + responseText);
+          if (responseText.equals("ERROR:device id already in use")) {
+            break;
+          }
         } catch (SocketTimeoutException e) {
           System.out.println("No server response within 5 seconds.");
         }

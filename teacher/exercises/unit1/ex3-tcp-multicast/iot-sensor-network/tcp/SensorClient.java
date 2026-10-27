@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
+import java.util.Locale;
+import java.util.UUID;
 
 /**
  * IoT sensor network — TCP client
@@ -20,7 +22,7 @@ public class SensorClient {
     private static final int SEND_INTERVAL_MS = 5_000;
 
     public static void main(String[] args) {
-        String deviceId = args.length > 0 ? args[0] : "sensor1";
+        String deviceId = args.length > 0 ? args[0] : "sensor-" + UUID.randomUUID();
         Random random = new Random();
 
         System.out.println("Sensor " + deviceId + " connecting to " + HOST + ":" + PORT + "...");
@@ -39,7 +41,7 @@ public class SensorClient {
                 double temp = 18 + random.nextDouble() * 12;
                 double humidity = 40 + random.nextDouble() * 40;
 
-                String message = String.format("%s:%.1f:%.1f", deviceId, temp, humidity);
+                String message = String.format(Locale.ROOT, "%s:%.1f:%.1f", deviceId, temp, humidity);
                 out.println(message);
                 System.out.println("TX: " + message);
 
@@ -50,6 +52,9 @@ public class SensorClient {
                     break;
                 }
                 System.out.println("RX: " + response);
+                if (response.equals("ERROR:device id already in use")) {
+                    break;
+                }
 
                 Thread.sleep(SEND_INTERVAL_MS);
             }

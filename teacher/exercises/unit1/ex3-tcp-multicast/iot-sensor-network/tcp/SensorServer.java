@@ -16,7 +16,7 @@ public class SensorServer {
   private static final int PORT = 5555;
   private static final int CLIENT_TIMEOUT_MS = 30_000; // timeout
 
-  private record Reading(double temperature, double humidity, long lastSeen) {
+  private record Reading(double temperature, double humidity, long lastSeen, Socket owner) {
   }
 
   // Key = DEVICE_ID; values expire after the device's inactivity timeout.
@@ -50,7 +50,7 @@ public class SensorServer {
 
       String line;
       while ((line = in.readLine()) != null) {
-        String response = process(line);
+        String response = process(line, client);
         out.println(response);
         System.out.println("RX: " + line + "  ->  TX: " + response);
       }
@@ -60,11 +60,12 @@ public class SensorServer {
     } catch (IOException e) {
       System.err.println("Client error: " + e.getMessage());
     } finally {
+      releaseReadings(socket);
       System.out.println("Sensor disconnected.");
     }
   }
 
-  private static String process(String line) {
+  private static synchronized String process(String line, Socket client) {
     String[] parts = line.split(":", -1);
     if (parts.length != 3) {
       return "ERROR:invalid data";
@@ -82,7 +83,11 @@ public class SensorServer {
       }
 
       removeInactiveReadings();
-      readings.put(deviceId, new Reading(temp, humidity, System.nanoTime()));
+      Reading existing = readings.get(deviceId);
+      if (existing != null && existing.owner() != client) {
+        return "ERROR:device id already in use";
+      }
+      readings.put(deviceId, new Reading(temp, humidity, System.nanoTime(), client));
       return averages();
     } catch (NumberFormatException e) {
       return "ERROR:invalid data";
@@ -103,12 +108,16 @@ public class SensorServer {
     return String.format(Locale.ROOT, "AVG:%.1f:%.1f (devices=%d)", avgTemp, avgHum, n);
   }
 
-  private static void removeInactiveReadings() {
+  private static synchronized void removeInactiveReadings() {
     long cutoff = System.nanoTime() - CLIENT_TIMEOUT_MS * 1_000_000L;
     readings.forEach((deviceId, reading) -> {
       if (reading.lastSeen() < cutoff) {
         readings.remove(deviceId, reading);
       }
     });
+  }
+
+  private static synchronized void releaseReadings(Socket client) {
+    readings.entrySet().removeIf(entry -> entry.getValue().owner() == client);
   }
 }

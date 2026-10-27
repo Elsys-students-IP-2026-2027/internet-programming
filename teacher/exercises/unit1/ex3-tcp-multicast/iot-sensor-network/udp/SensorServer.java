@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ public class SensorServer {
     private static final int RECEIVE_TIMEOUT_MS = 1_000;
     private static final int MAX_PACKET_SIZE = 1_024;
 
-    private record Reading(double temperature, double humidity, long lastSeen) {}
+    private record Reading(double temperature, double humidity, long lastSeen, SocketAddress owner) {}
 
     // DatagramSocket receives and updates readings on this single event loop.
     private static final Map<String, Reading> readings = new HashMap<>();
@@ -41,7 +42,7 @@ public class SensorServer {
                             request.getLength(),
                             StandardCharsets.UTF_8);
                     removeInactiveSensors();
-                    String response = process(message);
+                    String response = process(message, request.getSocketAddress());
                     byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
                     DatagramPacket reply = new DatagramPacket(
                             responseBytes,
@@ -60,7 +61,7 @@ public class SensorServer {
         }
     }
 
-    private static String process(String message) {
+    private static String process(String message, SocketAddress sender) {
         String[] parts = message.split(":", -1);
         if (parts.length != 3) {
             return "ERROR:invalid data";
@@ -81,7 +82,11 @@ public class SensorServer {
                 return "ERROR:invalid data";
             }
 
-            readings.put(deviceId, new Reading(temperature, humidity, System.nanoTime()));
+            Reading existing = readings.get(deviceId);
+            if (existing != null && !existing.owner().equals(sender)) {
+                return "ERROR:device id already in use";
+            }
+            readings.put(deviceId, new Reading(temperature, humidity, System.nanoTime(), sender));
             return averages();
         } catch (NumberFormatException e) {
             return "ERROR:invalid data";

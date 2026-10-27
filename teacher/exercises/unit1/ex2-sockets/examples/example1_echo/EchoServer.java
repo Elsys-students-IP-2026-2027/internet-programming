@@ -32,7 +32,7 @@ public class EchoServer {
         log("Connection established: " + socket.getInetAddress());
 
         // InputStream -reading,
-        // а OutputStream -writing.
+        // and OutputStream -writing.
         try (BufferedReader in = new BufferedReader(
             new InputStreamReader(socket.getInputStream()));
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {

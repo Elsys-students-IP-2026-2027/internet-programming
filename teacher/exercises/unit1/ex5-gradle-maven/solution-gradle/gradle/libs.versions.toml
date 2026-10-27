@@ -1,0 +1,11 @@
+[versions]
+gson = "2.11.0"
+junit-jupiter = "5.12.1"
+shadow = "9.2.2"
+
+[libraries]
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+
+[plugins]
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

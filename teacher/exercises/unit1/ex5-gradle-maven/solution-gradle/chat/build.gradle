@@ -1,0 +1,29 @@
+plugins {
+    id 'application'
+    alias(libs.plugins.shadow)
+}
+
+dependencies {
+    implementation libs.gson
+}
+
+application {
+    mainClass = 'bg.tues.chat.ChatServer'
+}
+
+tasks.register('runClient', JavaExec) {
+    group = 'application'
+    description = 'Runs the console chat client'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'bg.tues.chat.ChatClient'
+    def clientArgsProvider = providers.gradleProperty('clientArgs')
+        .map { it.trim().isEmpty() ? [] : it.trim().split('\\s+').findAll { token -> !token.isBlank() } }
+        .orElse([])
+    argumentProviders.add(new org.gradle.process.CommandLineArgumentProvider() {
+        @Override
+        Iterable<String> asArguments() {
+            clientArgsProvider.get()
+        }
+    })
+    standardInput = System.in
+}

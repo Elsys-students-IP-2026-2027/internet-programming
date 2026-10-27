@@ -35,7 +35,7 @@ public class UDPChatServer {
         }
     }
 
-    /** Обработва един получен пакет и връща отговор на подателя. */
+
     private static void handleMessage(DatagramPacket packet, DatagramSocket socket) {
         try {
             String message = new String(packet.getData(), 0, packet.getLength(),

@@ -1,0 +1,41 @@
+GET http://localhost:3000/
+
+###
+GET http://localhost:3000/about
+
+###
+GET http://localhost:3000/api
+
+###
+GET https://localhost:3443/
+
+###
+GET https://localhost:3443/about
+
+###
+GET https://localhost:3443/api
+
+### REST API server (rest-api-server.js, port 8000)
+
+GET http://localhost:8000/hello
+
+###
+POST http://localhost:8000/users
+Content-Type: application/json
+
+{"name": "Charlie"}
+
+###
+PUT http://localhost:8000/users/1
+Content-Type: application/json
+
+{"name": "Alice Updated"}
+
+###
+PATCH http://localhost:8000/users/2
+Content-Type: application/json
+
+{"status": "active"}
+
+###
+DELETE http://localhost:8000/users/1

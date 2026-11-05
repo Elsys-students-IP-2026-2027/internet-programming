@@ -6,6 +6,7 @@ const path = require('path');
 //curl -i http://localhost:3000/
 // curl http://localhost:3000/about
 // curl http://localhost:3000/api
+//create certificate: openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 365 -subj "/CN=localhost"
 const PORT = 3000;
 const HTTPS_PORT = 3443;
 

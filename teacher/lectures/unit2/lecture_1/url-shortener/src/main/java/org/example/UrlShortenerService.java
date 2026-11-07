@@ -3,14 +3,13 @@ package org.example;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * 1. Shorten URL  - shorten(longUrl)
- * 2. Expand URL   - expand(shortUrlOrCode)
- * 3. Performance  - hash-map lookups, O(1) in both directions
- * 4. Uniqueness   - a unique counter value is encoded in Base62, so two different
- *                   long URLs can never get the same code (no hash collisions);
- *                   the same long URL always gets the same code.
- */
+///1. Shorten URL  - shorten(longUrl)
+///2. Expand URL   - expand(shortUrlOrCode)
+///3. Performance  - hash-map lookups, O(1) in both directions
+///4. Uniqueness   - a unique counter value is encoded in Base62, so two different
+///                   long URLs can never get the same code (no hash collisions);
+///                 the same long URL always gets the same code.
+
 public class UrlShortenerService {
 
     public static final String DEFAULT_BASE_URL = "https://short.ly/";
@@ -36,7 +35,6 @@ public class UrlShortenerService {
         return baseUrl + code;
     }
 
-    /** Accepts either the full short URL or only the code. */
     public Optional<String> expand(String shortUrlOrCode) {
         if (shortUrlOrCode == null || shortUrlOrCode.isBlank()) {
             return Optional.empty();

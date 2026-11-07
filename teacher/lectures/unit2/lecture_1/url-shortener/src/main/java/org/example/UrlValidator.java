@@ -9,7 +9,6 @@ public final class UrlValidator {
     private UrlValidator() {
     }
 
-    /** Returns the normalized URL (lowercase scheme and host) or throws IllegalArgumentException. */
     public static String validateAndNormalize(String url) {
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("URL must not be empty");

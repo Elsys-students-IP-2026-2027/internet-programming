@@ -13,7 +13,6 @@ public class UrlRepository {
     private final ConcurrentHashMap<String, String> codeByUrl = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> urlByCode = new ConcurrentHashMap<>();
 
-    /** Returns the existing code for the URL or atomically creates a new one. */
     public String getOrCreateCode(String longUrl, Supplier<String> codeGenerator) {
         return codeByUrl.computeIfAbsent(longUrl, url -> {
             String code = codeGenerator.get();

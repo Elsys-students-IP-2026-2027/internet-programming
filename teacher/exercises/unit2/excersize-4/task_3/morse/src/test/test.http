@@ -1,0 +1,19 @@
+@base = http://localhost:8000
+
+### Secret Morse message
+GET {{base}}/api/secret-message
+
+### Hint
+GET {{base}}/api/hint
+
+### Encode Bulgarian text
+POST {{base}}/api/encode
+Content-Type: text/plain; charset=UTF-8
+
+А Б
+
+### Decode Morse
+POST {{base}}/api/decode
+Content-Type: text/plain; charset=UTF-8
+
+.- / -...

@@ -1,0 +1,73 @@
+@baseUrl = http://localhost:8000
+
+### Начално състояние: 200 и Cache-Control: public, max-age=3600
+GET {{baseUrl}}/api/tasks/5
+
+### Умишлен дефект: PUT заменя полетата, изтрива записа и връща 405
+PUT {{baseUrl}}/api/tasks/5
+Content-Type: application/json
+
+{"title": "Обновен доклад"}
+
+### След PUT: умишлено 405, записът вече липсва
+GET {{baseUrl}}/api/tasks/5
+
+### РЕСТАРТИРАЙТЕ сървъра преди тази независима PATCH поредица!
+GET {{baseUrl}}/api/tasks/5
+
+### Първи клиент: 200, съхранена версия 2
+PATCH {{baseUrl}}/api/tasks/5
+Content-Type: application/json
+
+{"title": "Промяна от първи клиент", "version": 1}
+
+### Втори клиент със стара версия 1: умишлено 200, версия 3 и загубена актуализация
+PATCH {{baseUrl}}/api/tasks/5
+Content-Type: application/json
+
+{"title": "Промяна от втори клиент", "version": 1}
+
+### Проверка на последната промяна
+GET {{baseUrl}}/api/tasks/5
+
+### DELETE изтрива, но умишлено връща 405
+DELETE {{baseUrl}}/api/tasks/5
+
+### Невалиден JSON: 400
+PUT {{baseUrl}}/api/tasks/5
+Content-Type: application/json
+
+{"title":
+
+### Невалидно заглавие: 400
+PUT {{baseUrl}}/api/tasks/5
+Content-Type: application/json
+
+{"title": ""}
+
+### Липсва версия: 400
+PATCH {{baseUrl}}/api/tasks/5
+Content-Type: application/json
+
+{"title": "Доклад"}
+
+### Липсващ запис: умишлено 405 при GET
+GET {{baseUrl}}/api/tasks/42
+
+### Липсващ запис при PATCH: 404
+PATCH {{baseUrl}}/api/tasks/42
+Content-Type: application/json
+
+{"title": "Доклад", "version": 1}
+
+### Неподдържан точен път: 404
+GET {{baseUrl}}/api/tasks/5/extra
+
+### Нечислов идентификатор: 404
+GET {{baseUrl}}/api/tasks/nope
+
+### Неподдържан метод: 405
+POST {{baseUrl}}/api/tasks/5
+Content-Type: application/json
+
+{}

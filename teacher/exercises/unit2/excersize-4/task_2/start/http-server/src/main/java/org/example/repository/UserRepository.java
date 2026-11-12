@@ -31,8 +31,6 @@ public class UserRepository {
         return Optional.ofNullable(users.get(id));
     }
 
-    // TODO: deleteById(UUID id) - returns true if the record existed
-
     public boolean existsById(UUID id) {
         return users.containsKey(id);
     }

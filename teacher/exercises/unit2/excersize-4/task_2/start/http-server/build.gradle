@@ -12,6 +12,7 @@ repositories {
 
 application {
     mainClass = 'org.example.HttpServerApp'
+    applicationDefaultJvmArgs = ['-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8']
 }
 
 dependencies {

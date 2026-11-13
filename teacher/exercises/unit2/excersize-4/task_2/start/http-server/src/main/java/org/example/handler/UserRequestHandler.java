@@ -42,6 +42,16 @@ public class UserRequestHandler extends AbstractHandler {
                 return;
             }
 
+            if ("/secret".equals(target)) {
+                if (method(request, "GET")) {
+                    respondText(response, 200, encodeSecret());
+                } else {
+                    response.setHeader("Allow", "GET");
+                    respondError(response, 405, "Method Not Allowed");
+                }
+                return;
+            }
+
             if ("/users".equals(target)) {
                 handleUserCollection(request, response);
                 return;
@@ -58,6 +68,17 @@ public class UserRequestHandler extends AbstractHandler {
             log.error("Internal server error", e);
             respondError(response, 500, "Internal Server Error");
         }
+    }
+
+    private String encodeSecret() {
+        String alphabet = "абвгдежзийклмнопрстуфхцчшщъьюя";
+        String message = "е само капка";
+        StringBuilder encoded = new StringBuilder();
+        for (char letter : message.toCharArray()) {
+            int index = alphabet.indexOf(letter);
+            encoded.append(index < 0 ? letter : alphabet.charAt((index + 3) % alphabet.length()));
+        }
+        return encoded.toString();
     }
 
     private void handleUserCollection(HttpServletRequest request, HttpServletResponse response) throws IOException {

@@ -1,0 +1,82 @@
+@base = http://localhost:8000
+
+### Начално състояние след рестарт: version = 1, Cache-Control: no-store
+GET {{base}}/api/tasks/5
+
+### PUT не се поддържа: 405, Allow: GET, PATCH, DELETE; НЕ изтрива
+PUT {{base}}/api/tasks/5
+Content-Type: application/json
+
+{"title":"Ново заглавие"}
+
+### Всички първоначални полета са запазени
+GET {{base}}/api/tasks/5
+
+### Частична редакция: 200, version = 2
+PATCH {{base}}/api/tasks/5
+Content-Type: application/json; charset=UTF-8
+
+{"title":"Готов доклад","version":1}
+
+### Друг редактор със стара версия: 409, без промяна
+PATCH {{base}}/api/tasks/5
+Content-Type: application/json
+
+{"title":"Редакция от втори прозорец","version":1}
+
+### Прочетете отново актуалното състояние преди следващ опит
+GET {{base}}/api/tasks/5
+
+### Празно заглавие: 400
+PATCH {{base}}/api/tasks/5
+Content-Type: application/json
+
+{"title":"   ","version":2}
+
+### Неподдържано поле: 400
+PATCH {{base}}/api/tasks/5
+Content-Type: application/json
+
+{"title":"Доклад","version":2,"priority":"low"}
+
+### Липсва версия: 400
+PATCH {{base}}/api/tasks/5
+Content-Type: application/json
+
+{"title":"Доклад"}
+
+### Невалиден JSON: 400
+PATCH {{base}}/api/tasks/5
+Content-Type: application/json
+
+{"title":
+
+### JSON null: 400
+PATCH {{base}}/api/tasks/5
+Content-Type: application/json
+
+null
+
+### Неподдържан тип: 415
+PATCH {{base}}/api/tasks/5
+Content-Type: text/plain
+
+{"title":"Доклад","version":2}
+
+### Несъществуващ ресурс: 404
+GET {{base}}/api/tasks/999
+
+### Непознат път: 404
+GET {{base}}/api/tasks/5/extra
+
+### Неподдържан метод: 405 + Allow
+POST {{base}}/api/tasks/5
+
+### Безусловно изтриване: 204 без тяло
+DELETE {{base}}/api/tasks/5
+
+### Повторно изтриване: 404
+DELETE {{base}}/api/tasks/5
+
+### Вече липсва: 404; рестартирайте за нов опит
+GET {{base}}/api/tasks/5

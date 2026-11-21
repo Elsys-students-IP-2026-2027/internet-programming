@@ -16,8 +16,8 @@ dependencies {
     // Jackson for JSON serialization/deserialization
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.1'
 
-    compileOnly 'org.projectlombok:lombok:1.18.34'
-    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    compileOnly 'org.projectlombok:lombok:1.18.42'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
 
     // Logging backend (Log4j2 via SLF4J)
     implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.24.1'

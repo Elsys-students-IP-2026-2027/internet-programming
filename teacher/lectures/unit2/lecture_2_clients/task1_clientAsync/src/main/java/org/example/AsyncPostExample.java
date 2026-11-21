@@ -17,7 +17,6 @@ public class AsyncPostExample {
     public static final String URL = "https://jsonplaceholder.typicode.com/posts";
 
     public static void main(String[] args) {
-        // Define the target URI and create a new Post object
         URI uri = URI.create(URL);
         Post post = new Post(1, 123, "Post title", "This is a sample POST request.");
 
@@ -33,19 +32,17 @@ public class AsyncPostExample {
                     .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                     .build();
 
-            // Send request asynchronously and process response
             CompletableFuture<HttpResponse<String>> responseFuture = client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
 
+            // join() on the whole chain, so exceptionally()handles errors
             responseFuture
                     .thenApply(HttpResponse::body)
                     .thenAccept(responseBody -> log.info("Response: {}", responseBody))
                     .exceptionally(e -> {
                         log.error("POST request failed", e);
                         return null;
-                    });
-
-            // Wait for the asynchronous call to complete
-            responseFuture.join();
+                    })
+                    .join();
 
         } catch (Exception e) {
             log.error("Error creating or sending POST request", e);

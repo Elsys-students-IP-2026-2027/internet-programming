@@ -1,0 +1,14 @@
+{
+  "name": "http-client-js",
+  "version": "1.0.0",
+  "description": "Упражнение 5 – REST клиент на JavaScript (fetch + Promise)",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "sync": "node src/syncDemo.js",
+    "async": "node src/asyncDemo.js",
+    "retry": "node src/retryDemo.js"
+  }
+}

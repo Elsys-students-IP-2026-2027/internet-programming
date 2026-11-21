@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+// ./gradlew run                                      -> SyncDemo  (Синхронен клиент)
+// ./gradlew run -Pmain=org.example.client.AsyncDemo  -> Асинхронен клиент
+// ./gradlew run -Pmain=org.example.client.RetryDemo  -> Retry
+application {
+    mainClass = project.findProperty('main') ?: 'org.example.client.SyncDemo'
+    applicationDefaultJvmArgs = ['-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8']
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = '25'
+    targetCompatibility = '25'
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.1'
+
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.24.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.24.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.24.1'
+}

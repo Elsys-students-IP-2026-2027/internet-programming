@@ -1,0 +1,96 @@
+### GET request to example server
+GET http://localhost:8000/hello
+
+### GET encrypted secret
+GET http://localhost:8000/secret
+Accept: text/plain
+
+### GET Bulgarian Morse puzzle (plain UTF-8 text, not JSON)
+GET http://localhost:8000/api/secret-message
+Accept: text/plain
+
+### POST encode Bulgarian text
+# Supported: А–Я (including Ъ and Ь), digits 0–9, comma, question mark, full stop.
+# UTF-8 text/plain is required (otherwise 415); charset parameters are accepted,
+# but request bytes are always read as UTF-8.
+# One space separates words in plain text; surrounding/repeated spaces are invalid.
+# Morse uses one space between letters and ' / ' between words.
+# Blank/unsupported text and unknown/malformed Morse return 400 (JSON error).
+# API routes are exact; wrong methods return 405 with Allow.
+POST http://localhost:8000/api/encode
+Content-Type: text/plain; charset=UTF-8
+Accept: text/plain
+
+Но какво е океанът, ако не съвкупност от капки?
+
+### POST decode Morse to uppercase Bulgarian Cyrillic (case is lost in Morse)
+POST http://localhost:8000/api/decode
+Content-Type: text/plain; charset=UTF-8
+Accept: text/plain
+
+-. --- / -.- .- -.- .-- --- / . / --- -.- . .- -. --.-- - --..-- / .- -.- --- / -. . / ... --.-- .-- -.- ..- .--. -. --- ... - / --- - / -.- .- .--. -.- .. ..--..
+
+
+### GET a hint without revealing the secret
+GET http://localhost:8000/api/hint
+Accept: text/plain
+
+
+###  GET all users
+GET http://localhost:8000/users
+Accept: application/json
+
+
+###  POST create new user
+POST http://localhost:8000/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Alice Example",
+  "age": 30,
+  "email": "alice@example.com",
+  "status": "active"
+}
+
+> {% client.global.set("userId", response.body.id); %}
+
+
+###  PUT reset user template
+PUT http://localhost:8000/users
+Accept: application/json
+
+
+###  GET user by ID
+# Uses the {{userId}} returned by the POST request above
+GET http://localhost:8000/users/{{userId}}
+Accept: application/json
+
+
+### PUT replace existing user
+PUT http://localhost:8000/users/{{userId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "id": "{{userId}}",
+  "name": "Updated Alice",
+  "age": 31,
+  "email": "alice.updated@example.com",
+  "status": "active"
+}
+
+
+###  PATCH update part of a user
+PATCH http://localhost:8000/users/{{userId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "status": "inactive"
+}
+
+
+###  DELETE user
+DELETE http://localhost:8000/users/{{userId}}
+Accept: application/json

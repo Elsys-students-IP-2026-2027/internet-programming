@@ -1,0 +1,218 @@
+package org.example.handler;
+
+
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.example.model.User;
+import org.example.service.MorseService;
+import org.example.service.UserService;
+import org.example.utils.JsonUtils;
+
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.example.utils.ResponseUtil.method;
+import static org.example.utils.ResponseUtil.respondError;
+import static org.example.utils.ResponseUtil.respondJson;
+import static org.example.utils.ResponseUtil.respondText;
+
+
+@Slf4j
+public class UserRequestHandler extends AbstractHandler {
+
+    private final UserService userService;
+    private final MorseService morseService = new MorseService();
+
+    public UserRequestHandler(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Override
+    public void handle(String target, Request baseRequest,
+                       HttpServletRequest request, HttpServletResponse response) {
+
+        baseRequest.setHandled(true);
+        log.info(" [{}] {}", request.getMethod(), target);
+
+        try {
+            if ("/hello".equals(target) && method(request, "GET")) {
+                respondText(response, 200, "Hello, World!");
+                return;
+            }
+
+            if ("/secret".equals(target)) {
+                if (method(request, "GET")) {
+                    respondText(response, 200, encodeSecret());
+                } else {
+                    response.setHeader("Allow", "GET");
+                    respondError(response, 405, "Method Not Allowed");
+                }
+                return;
+            }
+
+            if ("/api/secret-message".equals(target) || "/api/hint".equals(target)
+                    || "/api/encode".equals(target) || "/api/decode".equals(target)) {
+                handleMorseRequest(target, request, response);
+                return;
+            }
+
+            if ("/users".equals(target)) {
+                handleUserCollection(request, response);
+                return;
+            }
+
+            if (target.startsWith("/users/")) {
+                String idPart = target.substring("/users/".length());
+                handleUserById(idPart, request, response);
+                return;
+            }
+
+            respondError(response, 404, "Not Found");
+        } catch (Exception e) {
+            log.error("Internal server error", e);
+            respondError(response, 500, "Internal Server Error");
+        }
+    }
+
+    private void handleMorseRequest(String target, HttpServletRequest request,
+                                    HttpServletResponse response) throws IOException {
+        boolean conversion = "/api/encode".equals(target) || "/api/decode".equals(target);
+        String allowedMethod = conversion ? "POST" : "GET";
+        if (!method(request, allowedMethod)) {
+            response.setHeader("Allow", allowedMethod);
+            respondError(response, 405, "Method Not Allowed");
+            return;
+        }
+
+        if ("/api/secret-message".equals(target)) {
+            respondText(response, 200, morseService.encode("Но какво е океанът, ако не съвкупност от капки?"));
+            return;
+        }
+        if ("/api/hint".equals(target)) {
+            respondText(response, 200, "Две следи — къса (.) и дълга (-) — носят буквите. "
+                    + "Пауза от един интервал дели буквите, а ' / ' дели думите. "
+                    + "Потърси българската морзова азбука — отговорът е на кирилица.");
+            return;
+        }
+
+        String contentType = request.getContentType();
+        if (contentType == null || !"text/plain".equalsIgnoreCase(contentType.split(";", 2)[0].trim())) {
+            respondError(response, 415, "Content-Type must be text/plain; request text is UTF-8");
+            return;
+        }
+
+        request.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        StringWriter body = new StringWriter();
+        request.getReader().transferTo(body);
+        String result;
+        try {
+            result = "/api/encode".equals(target)
+                    ? morseService.encode(body.toString()) : morseService.decode(body.toString());
+        } catch (IllegalArgumentException e) {
+            log.warn(" {} rejected \"{}\": {}", target, body, e.getMessage());
+            respondError(response, 400, e.getMessage());
+            return;
+        }
+        log.info(" {} \"{}\" -> \"{}\"", target, body, result);
+        respondText(response, 200, result);
+    }
+
+    private String encodeSecret() {
+        String alphabet = "абвгдежзийклмнопрстуфхцчшщъьюя";
+        String message = "е само капка";
+        StringBuilder encoded = new StringBuilder();
+        for (char letter : message.toCharArray()) {
+            int index = alphabet.indexOf(letter);
+            encoded.append(index < 0 ? letter : alphabet.charAt((index + 3) % alphabet.length()));
+        }
+        return encoded.toString();
+    }
+
+    private void handleUserCollection(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        switch (request.getMethod()) {
+            case "POST" -> {
+                User newUser = JsonUtils.readJson(request.getReader(), User.class);
+                respondJson(response, 201, userService.createUser(newUser));
+            }
+            case "GET" -> respondJson(response, 200, userService.getAllUsers());
+            case "PUT" -> respondJson(response, 200, userService.resetUserTemplate());
+            default -> respondError(response, 405, "Method Not Allowed");
+        }
+    }
+
+    private void handleUserById(String idStr, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            UUID id = UUID.fromString(idStr);
+            String method = request.getMethod();
+
+            log.info(" [{}] /users/{}", method, id);
+
+            switch (method) {
+                case "GET" -> handleGetUserById(id, response);
+                case "PUT" -> handlePutUser(id, request, response);
+                case "PATCH" -> handlePatchUser(id, request, response);
+                case "DELETE" -> handleDeleteUser(id, response);
+                default -> respondError(response, 405, "Method Not Allowed");
+            }
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid UUID format: {}", idStr);
+            respondError(response, 400, "Invalid UUID format");
+        } catch (Exception e) {
+            log.error("Error processing user request: {}", e.getMessage(), e);
+            respondError(response, 500, "Internal Server Error");
+        }
+    }
+
+    private void handleGetUserById(UUID id, HttpServletResponse response) throws IOException {
+        userService.getUserById(id)
+                .ifPresentOrElse(
+                        user -> respondJson(response, 200, user),
+                        () -> respondError(response, 404, "User not found")
+                );
+    }
+
+    private void handlePutUser(UUID id, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        User updated = JsonUtils.readJson(request.getReader(), User.class);
+        userService.replaceUser(id, updated)
+                .ifPresentOrElse(
+                        user -> respondJson(response, 200, user),
+                        () -> respondError(response, 404, "User not found")
+                );
+    }
+
+    private void handlePatchUser(UUID id, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        JsonNode patch = JsonUtils.readTree(request.getReader());
+        if (patch == null || !patch.isObject()) {
+            respondError(response, 400, "Request body must be a JSON object");
+            return;
+        }
+        try {
+            userService.patchUser(id, patch)
+                    .ifPresentOrElse(
+                            user -> respondJson(response, 200, user),
+                            () -> respondError(response, 404, "User not found")
+                    );
+        } catch (IllegalArgumentException e) {
+            // Caught here, otherwise handleUserById would report it as "Invalid UUID format"
+            respondError(response, 400, e.getMessage());
+        }
+    }
+
+    private void handleDeleteUser(UUID id, HttpServletResponse response) throws IOException {
+        boolean deleted = userService.deleteUser(id);
+        if (deleted) {
+            respondJson(response, 200, Map.of("message", "User deleted"));
+        } else {
+            respondError(response, 404, "User not found");
+        }
+    }
+}

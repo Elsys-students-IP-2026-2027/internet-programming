@@ -15,7 +15,7 @@ public class HttpClientTask {
             local.patch("/user/1", Map.of("status", "active"));
             local.delete("/user/1");
         } catch (ApiClient.ApiException e) {
-            System.err.println("Локалният сървър не отговаря: " + e.getMessage());
+            System.err.println("Local server is not responding: " + e.getMessage());
         }
 
         ApiClient placeholder = new ApiClient("https://jsonplaceholder.typicode.com");

@@ -64,7 +64,7 @@ public class ApiClient {
         } catch (IOException e) {
             throw new ApiException(method + " " + uri + " failed", e);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();          // възстановяваме флага
+            Thread.currentThread().interrupt();          // restore the interrupt flag
             throw new ApiException(method + " " + uri + " interrupted", e);
         }
     }
@@ -75,7 +75,7 @@ public class ApiClient {
 
     private String toJson(Object body) {
         if (body instanceof String s) {
-            return s;                                    // вече е JSON
+            return s;                                    // already JSON
         }
         try {
             return mapper.writeValueAsString(body);

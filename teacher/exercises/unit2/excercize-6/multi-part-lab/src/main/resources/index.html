@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Предай домашно</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; }
+        form { border: 1px solid #ccc; border-radius: .5rem; padding: 1rem; margin-bottom: 1.5rem; }
+        .broken { border-color: #d33; }
+        code { background: #f3f3f3; padding: 0 .25rem; }
+        pre { background: #f6f6f6; padding: .75rem; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+<h1>Форма за предаване на домашно</h1>
+<p>Отворете DevTools → <b>Network</b> (включете <b>Preserve log</b> и колоната <b>Protocol</b>),
+    после изпратете файл. Гледайте заявката <code>POST /upload</code>.</p>
+
+<h2>1. Правилна форма</h2>
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <p><label>Ученик <input name="student" value="Иван Иванов" required></label></p>
+    <p><label>Файл (pdf, png, jpg, zip, txt) <input type="file" name="homework" required></label></p>
+    <button type="submit">Изпрати (multipart/form-data)</button>
+</form>
+
+<h2>2. Форма без <code>enctype</code></h2>
+<form class="broken" action="/upload" method="post">
+    <p><label>Ученик <input name="student" value="Иван Иванов"></label></p>
+    <p><label>Файл <input type="file" name="homework"></label></p>
+    <button type="submit">Изпрати (по подразбиране)</button>
+</form>
+
+<h2>3. Същата форма с <code>fetch</code> + <code>FormData</code></h2>
+<form id="js-form">
+    <p><label>Ученик <input name="student" value="Иван Иванов" required></label></p>
+    <p><label>Файл <input type="file" name="homework" required></label></p>
+    <button type="submit">Изпрати с JavaScript</button>
+</form>
+<pre id="result">Все още няма заявка.</pre>
+
+<script>
+    document.querySelector('#js-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const response = await fetch('/upload', { method: 'POST', body: new FormData(event.target) });
+        document.querySelector('#result').textContent =
+            response.status + ' ' + (response.headers.get('Location') ?? '') + '\n' + await response.text();
+    });
+</script>
+</body>
+</html>
+

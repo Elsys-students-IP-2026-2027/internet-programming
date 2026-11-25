@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'org.example'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.11.3')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// ./gradlew run  – start UploadServer на http://localhost:8080
+application {
+    mainClass = 'org.example.upload.UploadServer'
+    applicationDefaultJvmArgs = ['-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8']
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+// ./gradlew probe
+tasks.register('probe', JavaExec) {
+    group = 'application'
+    description = 'Проверява коя HTTP версия реално се използва.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.example.upload.httpprobe.HttpProbe'
+    jvmArgs = ['-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8']
+    if (project.hasProperty('urls')) {
+        args project.property('urls').toString().split(',')
+    }
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        exceptionFormat = 'full'
+    }
+}
+
